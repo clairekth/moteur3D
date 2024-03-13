@@ -3,6 +3,7 @@
 #include <string.h>
 #include <iostream>
 #include <vector>
+#include "model.h"
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red = TGAColor(255, 0, 0, 255);
@@ -47,67 +48,50 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color)
 	}
 }
 
-std::vector<std::vector<float>> parser_obj(const char *filename)
-{
-	std::ifstream in;
-	in.open(filename, std::ifstream::in);
-	std::vector<std::vector<float>> vertex;
-
-	if (!in.is_open())
-	{
-		std::cerr << "Cannot open " << filename << std::endl;
-		return vertex;
-	}
-	std::string line;
-	float x, y, z;
-	int nb_vertex = 0;
-
-	while (!in.eof())
-	{
-		while (std::getline(in, line))
-		{
-			if (line.c_str()[0] == 'v' && line.c_str()[1] == ' ')
-			{
-				sscanf(line.c_str(), "v %f %f %f", &x, &y, &z);
-				std::cout
-					<< "x : " << x << " y : " << y << " z :" << z << std::endl;
-				nb_vertex++;
-				vertex.push_back({x, y, z});
-			}
-		}
-	}
-	std::cout << "nb_vertex : " << nb_vertex << std::endl;
-	std::cout << "vertex.size() : " << vertex.size() << std::endl;
-	in.close();
-
-	return vertex;
-}
-
-void draw_vertex(std::vector<std::vector<float>> vertex, TGAImage &image, TGAColor color)
+void draw_vertex(Model model, TGAImage &image, TGAColor color)
 {
 	int nb_vertex_draw = 0;
-	int nb_vertex = vertex.size();
+	int nb_vertex = model.vertex.size();
 	for (int i = 0; i < nb_vertex; i++)
 	{
-		// Remap the vertex to the image : -1 = 0, 1 = image.width or image.height
-		// add + 1 so the vertex is between 0 and 2
-		// multiply by image.width or image.height
-		// and divide by 2 to get the right position ( 2 = image width or height ; x, y = ? so ? = x * image.width or height / 2)
-		int x = (vertex[i][0] + 1) * image.get_width() / 2;
-		int y = (vertex[i][1] + 1) * image.get_height() / 2;
-		image.set(x, y, color);
+		image.set(model.vertex[i].x, model.vertex[i].y, color);
 		nb_vertex_draw++;
 	}
 
 	std::cout << "nb_vertex_draw: " << nb_vertex_draw << std::endl;
 }
 
+void draw_triangle(Model model, TGAImage &image, TGAColor color)
+{
+	int nb_triangles = model.facettes.size();
+	int nb_triangles_draw = 0;
+
+	for (int i = 0; i < nb_triangles; i++)
+	{
+		int x0 = model.vertex[model.facettes[i].ip0].x;
+		int y0 = model.vertex[model.facettes[i].ip0].y;
+		int x1 = model.vertex[model.facettes[i].ip1].x;
+		int y1 = model.vertex[model.facettes[i].ip1].y;
+		int x2 = model.vertex[model.facettes[i].ip2].x;
+		int y2 = model.vertex[model.facettes[i].ip2].y;
+
+		line(x0, y0, x1, y1, image, color);
+		line(x1, y1, x2, y2, image, color);
+		line(x2, y2, x0, y0, image, color);
+
+		nb_triangles_draw++;
+	}
+
+	std::cout << "nb_triangles_draw: " << nb_triangles_draw << std::endl;
+}
+
 int main(int argc, char **argv)
 {
 	TGAImage image(width, height, TGAImage::RGB);
-	std::vector<std::vector<float>> v = parser_obj("obj/african_head/african_head.obj");
-	draw_vertex(v, image, white);
-	image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
+	Model m = Model("obj/african_head/african_head.obj", width, height);
+	draw_vertex(m, image, white);
+	draw_triangle(m, image, white);
+	image.flip_vertically();
 	image.write_tga_file("output.tga");
 	return 0;
 }
