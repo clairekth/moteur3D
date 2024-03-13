@@ -48,41 +48,34 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color)
 	}
 }
 
-void draw_vertex(Model model, TGAImage &image, TGAColor color)
+void draw_vertex(Model &model, TGAImage &image, TGAColor color)
 {
-	int nb_vertex_draw = 0;
 	int nb_vertex = model.vertex.size();
 	for (int i = 0; i < nb_vertex; i++)
 	{
 		image.set(model.vertex[i].x, model.vertex[i].y, color);
-		nb_vertex_draw++;
 	}
-
-	std::cout << "nb_vertex_draw: " << nb_vertex_draw << std::endl;
 }
 
-void draw_triangle(Model model, TGAImage &image, TGAColor color)
+void draw_triangle(Model &model, TGAImage &image, TGAColor color)
 {
-	int nb_triangles = model.facettes.size();
-	int nb_triangles_draw = 0;
+	int nb_triangles = model.triangles.size();
 
 	for (int i = 0; i < nb_triangles; i++)
 	{
-		int x0 = model.vertex[model.facettes[i].ip0].x;
-		int y0 = model.vertex[model.facettes[i].ip0].y;
-		int x1 = model.vertex[model.facettes[i].ip1].x;
-		int y1 = model.vertex[model.facettes[i].ip1].y;
-		int x2 = model.vertex[model.facettes[i].ip2].x;
-		int y2 = model.vertex[model.facettes[i].ip2].y;
+		int x0 = model.vertex[model.triangles[i].ip0].x;
+		int y0 = model.vertex[model.triangles[i].ip0].y;
+
+		int x1 = model.vertex[model.triangles[i].ip1].x;
+		int y1 = model.vertex[model.triangles[i].ip1].y;
+
+		int x2 = model.vertex[model.triangles[i].ip2].x;
+		int y2 = model.vertex[model.triangles[i].ip2].y;
 
 		line(x0, y0, x1, y1, image, color);
 		line(x1, y1, x2, y2, image, color);
 		line(x2, y2, x0, y0, image, color);
-
-		nb_triangles_draw++;
 	}
-
-	std::cout << "nb_triangles_draw: " << nb_triangles_draw << std::endl;
 }
 
 int main(int argc, char **argv)

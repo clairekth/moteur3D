@@ -21,7 +21,7 @@ struct Triangle
 struct Model
 {
     std::vector<Point> vertex;
-    std::vector<Triangle> facettes;
+    std::vector<Triangle> triangles;
 
     Model(const char *filename, const int width, const int height)
     {
@@ -43,8 +43,7 @@ struct Model
                 {
                     float a, b, c;
                     sscanf(line.c_str(), "v %f %f %f", &a, &b, &c);
-                    // std::cout
-                    //     << "x : " << a << " y : " << b << " z :" << c << std::endl;
+
                     // Remap the vertex to the image : -1 = 0, 1 = image.width or image.height
                     // add + 1 so the vertex is between 0 and 2
                     // multiply by image.width or image.height
@@ -58,7 +57,7 @@ struct Model
                 {
                     int a1, b1, c1, a2, b2, c2, a3, b3, c3;
                     sscanf(line.c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d", &a1, &b1, &c1, &a2, &b2, &c2, &a3, &b3, &c3);
-                    facettes.push_back({a1 - 1, a2 - 1, a3 - 1});
+                    triangles.push_back({a1 - 1, a2 - 1, a3 - 1});
                 }
             }
         }
