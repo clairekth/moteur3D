@@ -5,12 +5,7 @@
 #include <string.h>
 #include <iostream>
 #include <fstream>
-
-struct Vector3f
-{
-    float x, y, z;
-    Vector3f(float x, float y, float z) : x(x), y(y), z(z) {}
-};
+#include "Vector3f.h"
 
 struct Triangle
 {

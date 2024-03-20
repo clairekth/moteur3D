@@ -3,7 +3,7 @@
 #include <string.h>
 #include <iostream>
 #include <vector>
-#include "model.h"
+#include "Model.h"
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red = TGAColor(255, 0, 0, 255);
@@ -96,19 +96,21 @@ void fill_triangle(Model &model, TGAImage &image)
 	{
 		int x0 = model.vertex[model.triangles[i].ip0].x;
 		int y0 = model.vertex[model.triangles[i].ip0].y;
+		int z0 = model.vertex[model.triangles[i].ip0].z;
 
 		int x1 = model.vertex[model.triangles[i].ip1].x;
 		int y1 = model.vertex[model.triangles[i].ip1].y;
+		int z1 = model.vertex[model.triangles[i].ip1].z;
 
 		int x2 = model.vertex[model.triangles[i].ip2].x;
 		int y2 = model.vertex[model.triangles[i].ip2].y;
+		int z2 = model.vertex[model.triangles[i].ip2].z;
 
-		Vector3f A(x0, y0, 0);
-		Vector3f B(x1, y1, 0);
-		Vector3f C(x2, y2, 0);
+		Vector3f A(x0, y0, z0);
+		Vector3f B(x1, y1, z1);
+		Vector3f C(x2, y2, z2);
 
 		TGAColor color = TGAColor(rand() % 255, rand() % 255, rand() % 255, 255);
-		draw_triangle(A, B, C, image, color);
 
 		int min_x = std::min(std::min(x0, x1), x2);
 		int min_y = std::min(std::min(y0, y1), y2);
