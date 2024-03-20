@@ -43,10 +43,10 @@ struct Model
                     // add + 1 so the vertex is between 0 and 2
                     // multiply by image.width or image.height
                     // and multiply by 0.5 (<=> divide by 2) to get the right position ( 2 = image width or height ; x, y = ? so ? = x * image.width or height / 2)
-                    int x = (a + 1) * 0.5 * width;
-                    int y = (b + 1) * 0.5 * height;
-                    int z = (c + 1) * 0.5 * width;
-                    vertex.push_back({x, y, z});
+                    // int x = (a + 1) * 0.5 * width;
+                    // int y = (b + 1) * 0.5 * height;
+                    // int z = (c + 1) * 0.5 * width;
+                    vertex.push_back({a, b, c});
                 }
                 else if (line.c_str()[0] == 'f' && line.c_str()[1] == ' ')
                 {

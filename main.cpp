@@ -9,6 +9,7 @@ const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red = TGAColor(255, 0, 0, 255);
 const int width = 800;
 const int height = 800;
+const Vector3f light_dir(0, 0, 1);
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color)
 {
@@ -88,29 +89,55 @@ bool is_inside(Vector3f barycenter)
 	return barycenter.x >= 0 && barycenter.y >= 0 && barycenter.z >= 0 && barycenter.x <= 1 && barycenter.y <= 1 && barycenter.z <= 1;
 }
 
+Vector3f cross_product(Vector3f A, Vector3f B)
+{
+	return Vector3f(A.y * B.z - A.z * B.y, A.z * B.x - A.x * B.z, A.x * B.y - A.y * B.x);
+}
+
+float dot_product(Vector3f A, Vector3f B)
+{
+	return A.x * B.x + A.y * B.y + A.z * B.z;
+}
+
 void fill_triangle(Model &model, TGAImage &image)
 {
 	int nb_triangles = model.triangles.size();
 
 	for (int i = 0; i < nb_triangles; i++)
 	{
-		int x0 = model.vertex[model.triangles[i].ip0].x;
-		int y0 = model.vertex[model.triangles[i].ip0].y;
-		int z0 = model.vertex[model.triangles[i].ip0].z;
+		float x0 = (model.vertex[model.triangles[i].ip0].x + 1) * 0.5 * width;
+		float y0 = (model.vertex[model.triangles[i].ip0].y + 1) * 0.5 * height;
+		float z0 = model.vertex[model.triangles[i].ip0].z;
 
-		int x1 = model.vertex[model.triangles[i].ip1].x;
-		int y1 = model.vertex[model.triangles[i].ip1].y;
-		int z1 = model.vertex[model.triangles[i].ip1].z;
+		float x1 = (model.vertex[model.triangles[i].ip1].x + 1) * 0.5 * width;
+		float y1 = (model.vertex[model.triangles[i].ip1].y + 1) * 0.5 * height;
+		float z1 = model.vertex[model.triangles[i].ip1].z;
 
-		int x2 = model.vertex[model.triangles[i].ip2].x;
-		int y2 = model.vertex[model.triangles[i].ip2].y;
-		int z2 = model.vertex[model.triangles[i].ip2].z;
+		float x2 = (model.vertex[model.triangles[i].ip2].x + 1) * 0.5 * width;
+		float y2 = (model.vertex[model.triangles[i].ip2].y + 1) * 0.5 * height;
+		float z2 = model.vertex[model.triangles[i].ip2].z;
 
 		Vector3f A(x0, y0, z0);
 		Vector3f B(x1, y1, z1);
 		Vector3f C(x2, y2, z2);
 
-		TGAColor color = TGAColor(rand() % 255, rand() % 255, rand() % 255, 255);
+		// Intensity
+		Vector3f world_A(model.vertex[model.triangles[i].ip0].x, model.vertex[model.triangles[i].ip0].y, model.vertex[model.triangles[i].ip0].z);
+		Vector3f world_B(model.vertex[model.triangles[i].ip1].x, model.vertex[model.triangles[i].ip1].y, model.vertex[model.triangles[i].ip1].z);
+		Vector3f world_C(model.vertex[model.triangles[i].ip2].x, model.vertex[model.triangles[i].ip2].y, model.vertex[model.triangles[i].ip2].z);
+
+		Vector3f normal = cross_product(world_B - world_A, world_C - world_A);
+		normal.normalize();
+		float intensity = dot_product(normal, light_dir);
+
+		if (intensity < 0)
+		{
+			continue;
+		}
+
+		TGAColor color = TGAColor(intensity * 255, intensity * 255, intensity * 255, 255);
+
+		// TGAColor color = TGAColor(rand() % 255, rand() % 255, rand() % 255, 255);
 
 		int min_x = std::min(std::min(x0, x1), x2);
 		int min_y = std::min(std::min(y0, y1), y2);
