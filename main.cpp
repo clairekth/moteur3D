@@ -57,7 +57,38 @@ void draw_vertex(Model &model, TGAImage &image, TGAColor color)
 	}
 }
 
-void draw_triangle(Model &model, TGAImage &image, TGAColor color)
+void draw_triangle(Vector3f A, Vector3f B, Vector3f C, TGAImage &image, TGAColor color)
+{
+
+	line(A.x, A.y, B.x, B.y, image, color);
+	line(A.x, A.y, C.x, C.y, image, color);
+	line(B.x, B.y, C.x, C.y, image, color);
+}
+
+Vector3f barycentric(Vector3f A, Vector3f B, Vector3f C, Vector3f P)
+{
+	// Aire ABC
+	float ABC = ((B.x - A.x) * (C.y - A.y) - (B.y - A.y) * (C.x - A.x));
+	// Aire PBC
+	float PBC = ((B.x - P.x) * (C.y - P.y) - (B.y - P.y) * (C.x - P.x));
+	// Aire PCA
+	float PCA = ((C.x - P.x) * (A.y - P.y) - (C.y - P.y) * (A.x - P.x));
+	// Aire PAB
+	float PAB = ((A.x - P.x) * (B.y - P.y) - (A.y - P.y) * (B.x - P.x));
+
+	float alpha = PBC / ABC;
+	float beta = PCA / ABC;
+	float gamma = PAB / ABC;
+
+	return Vector3f(alpha, beta, gamma);
+}
+
+bool is_inside(Vector3f barycenter)
+{
+	return barycenter.x >= 0 && barycenter.y >= 0 && barycenter.z >= 0 && barycenter.x <= 1 && barycenter.y <= 1 && barycenter.z <= 1;
+}
+
+void fill_triangle(Model &model, TGAImage &image)
 {
 	int nb_triangles = model.triangles.size();
 
@@ -72,9 +103,30 @@ void draw_triangle(Model &model, TGAImage &image, TGAColor color)
 		int x2 = model.vertex[model.triangles[i].ip2].x;
 		int y2 = model.vertex[model.triangles[i].ip2].y;
 
-		line(x0, y0, x1, y1, image, color);
-		line(x1, y1, x2, y2, image, color);
-		line(x2, y2, x0, y0, image, color);
+		Vector3f A(x0, y0, 0);
+		Vector3f B(x1, y1, 0);
+		Vector3f C(x2, y2, 0);
+
+		TGAColor color = TGAColor(rand() % 255, rand() % 255, rand() % 255, 255);
+		draw_triangle(A, B, C, image, color);
+
+		int min_x = std::min(std::min(x0, x1), x2);
+		int min_y = std::min(std::min(y0, y1), y2);
+		int max_x = std::max(std::max(x0, x1), x2);
+		int max_y = std::max(std::max(y0, y1), y2);
+
+		for (int x = min_x; x <= max_x; x++)
+		{
+			for (int y = min_y; y <= max_y; y++)
+			{
+				Vector3f P(x, y, 0);
+				Vector3f barycenter = barycentric(A, B, C, P);
+				if (is_inside(barycenter))
+				{
+					image.set(x, y, color);
+				}
+			}
+		}
 	}
 }
 
@@ -82,8 +134,7 @@ int main(int argc, char **argv)
 {
 	TGAImage image(width, height, TGAImage::RGB);
 	Model m = Model("obj/african_head/african_head.obj", width, height);
-	draw_vertex(m, image, white);
-	draw_triangle(m, image, white);
+	fill_triangle(m, image);
 	image.flip_vertically();
 	image.write_tga_file("output.tga");
 	return 0;

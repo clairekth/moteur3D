@@ -6,10 +6,10 @@
 #include <iostream>
 #include <fstream>
 
-struct Point
+struct Vector3f
 {
-    int x, y, z;
-    Point(int x, int y, int z) : x(x), y(y), z(z) {}
+    float x, y, z;
+    Vector3f(float x, float y, float z) : x(x), y(y), z(z) {}
 };
 
 struct Triangle
@@ -20,7 +20,7 @@ struct Triangle
 
 struct Model
 {
-    std::vector<Point> vertex;
+    std::vector<Vector3f> vertex;
     std::vector<Triangle> triangles;
 
     Model(const char *filename, const int width, const int height)
