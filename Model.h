@@ -18,7 +18,7 @@ struct Model
     std::vector<Vector3f> vertex;
     std::vector<Triangle> triangles;
 
-    Model(const char *filename, const int width, const int height)
+    Model(const char *filename)
     {
         std::ifstream in;
         in.open(filename, std::ifstream::in);

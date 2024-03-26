@@ -148,13 +148,13 @@ void draw_all_triangles(Model &model, TGAImage &image)
 
 	for (int i = 0; i < nb_triangles; i++)
 	{
-		// Intensity
 		Vector3f world_A(model.vertex[model.triangles[i].ip0].x, model.vertex[model.triangles[i].ip0].y, model.vertex[model.triangles[i].ip0].z);
 		Vector3f world_B(model.vertex[model.triangles[i].ip1].x, model.vertex[model.triangles[i].ip1].y, model.vertex[model.triangles[i].ip1].z);
 		Vector3f world_C(model.vertex[model.triangles[i].ip2].x, model.vertex[model.triangles[i].ip2].y, model.vertex[model.triangles[i].ip2].z);
 
 		std::vector<Vector3f> pts = {world_A, world_B, world_C};
 
+		// Intensity
 		Vector3f normal = cross_product(world_C - world_A, world_B - world_A);
 		normal.normalize();
 		float intensity = dot_product(normal, light_dir);
@@ -172,7 +172,7 @@ void draw_all_triangles(Model &model, TGAImage &image)
 int main(int argc, char **argv)
 {
 	TGAImage image(width, height, TGAImage::RGB);
-	Model m = Model("obj/african_head/african_head.obj", width, height);
+	Model m = Model("obj/african_head/african_head.obj");
 	draw_all_triangles(m, image);
 	image.flip_vertically();
 	image.write_tga_file("output.tga");
