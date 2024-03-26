@@ -9,7 +9,7 @@ const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red = TGAColor(255, 0, 0, 255);
 const int width = 800;
 const int height = 800;
-const Vector3f light_dir(0, 0, 1);
+const Vector3f light_dir(0, 0, -1);
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color)
 {
@@ -103,6 +103,12 @@ void fill_triangle(Model &model, TGAImage &image)
 {
 	int nb_triangles = model.triangles.size();
 
+	float *zbuffer = new float[width * height];
+	for (int j = 0; j < width * height; j++)
+	{
+		zbuffer[j] = std::numeric_limits<float>::lowest();
+	}
+
 	for (int i = 0; i < nb_triangles; i++)
 	{
 		float x0 = (model.vertex[model.triangles[i].ip0].x + 1) * 0.5 * width;
@@ -126,14 +132,12 @@ void fill_triangle(Model &model, TGAImage &image)
 		Vector3f world_B(model.vertex[model.triangles[i].ip1].x, model.vertex[model.triangles[i].ip1].y, model.vertex[model.triangles[i].ip1].z);
 		Vector3f world_C(model.vertex[model.triangles[i].ip2].x, model.vertex[model.triangles[i].ip2].y, model.vertex[model.triangles[i].ip2].z);
 
-		Vector3f normal = cross_product(world_B - world_A, world_C - world_A);
+		Vector3f normal = cross_product(world_C - world_A, world_B - world_A);
 		normal.normalize();
 		float intensity = dot_product(normal, light_dir);
 
 		if (intensity < 0)
-		{
 			continue;
-		}
 
 		TGAColor color = TGAColor(intensity * 255, intensity * 255, intensity * 255, 255);
 
@@ -152,7 +156,12 @@ void fill_triangle(Model &model, TGAImage &image)
 				Vector3f barycenter = barycentric(A, B, C, P);
 				if (is_inside(barycenter))
 				{
-					image.set(x, y, color);
+					P.z = world_A.z * barycenter.x + world_B.z * barycenter.y + world_C.z * barycenter.z;
+					if (zbuffer[x + y * width] < P.z)
+					{
+						zbuffer[x + y * width] = P.z;
+						image.set(x, y, color);
+					}
 				}
 			}
 		}
