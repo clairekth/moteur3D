@@ -58,7 +58,7 @@ void draw_vertex(Model &model, TGAImage &image, TGAColor color)
 	}
 }
 
-void draw_triangle(Vector3f A, Vector3f B, Vector3f C, TGAImage &image, TGAColor color)
+void draw_line_triangle(Vector3f A, Vector3f B, Vector3f C, TGAImage &image, TGAColor color)
 {
 
 	line(A.x, A.y, B.x, B.y, image, color);
@@ -68,15 +68,13 @@ void draw_triangle(Vector3f A, Vector3f B, Vector3f C, TGAImage &image, TGAColor
 
 Vector3f barycentric(Vector3f A, Vector3f B, Vector3f C, Vector3f P)
 {
-	// Aire ABC
+	// Calcul triangle areas
 	float ABC = ((B.x - A.x) * (C.y - A.y) - (B.y - A.y) * (C.x - A.x));
-	// Aire PBC
 	float PBC = ((B.x - P.x) * (C.y - P.y) - (B.y - P.y) * (C.x - P.x));
-	// Aire PCA
 	float PCA = ((C.x - P.x) * (A.y - P.y) - (C.y - P.y) * (A.x - P.x));
-	// Aire PAB
 	float PAB = ((A.x - P.x) * (B.y - P.y) - (A.y - P.y) * (B.x - P.x));
 
+	// Barycentric coordinates
 	float alpha = PBC / ABC;
 	float beta = PCA / ABC;
 	float gamma = PAB / ABC;
@@ -99,7 +97,46 @@ float dot_product(Vector3f A, Vector3f B)
 	return A.x * B.x + A.y * B.y + A.z * B.z;
 }
 
-void fill_triangle(Model &model, TGAImage &image)
+void draw_fill_triangle(TGAImage &image, std::vector<Vector3f> pts, float *zbuffer, TGAColor color)
+{
+	float x0 = (pts[0].x + 1) * 0.5 * width;
+	float y0 = (pts[0].y + 1) * 0.5 * height;
+
+	float x1 = (pts[1].x + 1) * 0.5 * width;
+	float y1 = (pts[1].y + 1) * 0.5 * height;
+
+	float x2 = (pts[2].x + 1) * 0.5 * width;
+	float y2 = (pts[2].y + 1) * 0.5 * height;
+
+	Vector3f A(x0, y0, 0);
+	Vector3f B(x1, y1, 0);
+	Vector3f C(x2, y2, 0);
+
+	int min_x = std::min(std::min(x0, x1), x2);
+	int min_y = std::min(std::min(y0, y1), y2);
+	int max_x = std::max(std::max(x0, x1), x2);
+	int max_y = std::max(std::max(y0, y1), y2);
+
+	for (int x = min_x; x <= max_x; x++)
+	{
+		for (int y = min_y; y <= max_y; y++)
+		{
+			Vector3f P(x, y, 0);
+			Vector3f barycenter = barycentric(A, B, C, P);
+			if (is_inside(barycenter))
+			{
+				P.z = pts[0].z * barycenter.x + pts[1].z * barycenter.y + pts[2].z * barycenter.z;
+				if (zbuffer[x + y * width] < P.z)
+				{
+					zbuffer[x + y * width] = P.z;
+					image.set(x, y, color);
+				}
+			}
+		}
+	}
+}
+
+void draw_all_triangles(Model &model, TGAImage &image)
 {
 	int nb_triangles = model.triangles.size();
 
@@ -111,26 +148,12 @@ void fill_triangle(Model &model, TGAImage &image)
 
 	for (int i = 0; i < nb_triangles; i++)
 	{
-		float x0 = (model.vertex[model.triangles[i].ip0].x + 1) * 0.5 * width;
-		float y0 = (model.vertex[model.triangles[i].ip0].y + 1) * 0.5 * height;
-		float z0 = model.vertex[model.triangles[i].ip0].z;
-
-		float x1 = (model.vertex[model.triangles[i].ip1].x + 1) * 0.5 * width;
-		float y1 = (model.vertex[model.triangles[i].ip1].y + 1) * 0.5 * height;
-		float z1 = model.vertex[model.triangles[i].ip1].z;
-
-		float x2 = (model.vertex[model.triangles[i].ip2].x + 1) * 0.5 * width;
-		float y2 = (model.vertex[model.triangles[i].ip2].y + 1) * 0.5 * height;
-		float z2 = model.vertex[model.triangles[i].ip2].z;
-
-		Vector3f A(x0, y0, z0);
-		Vector3f B(x1, y1, z1);
-		Vector3f C(x2, y2, z2);
-
 		// Intensity
 		Vector3f world_A(model.vertex[model.triangles[i].ip0].x, model.vertex[model.triangles[i].ip0].y, model.vertex[model.triangles[i].ip0].z);
 		Vector3f world_B(model.vertex[model.triangles[i].ip1].x, model.vertex[model.triangles[i].ip1].y, model.vertex[model.triangles[i].ip1].z);
 		Vector3f world_C(model.vertex[model.triangles[i].ip2].x, model.vertex[model.triangles[i].ip2].y, model.vertex[model.triangles[i].ip2].z);
+
+		std::vector<Vector3f> pts = {world_A, world_B, world_C};
 
 		Vector3f normal = cross_product(world_C - world_A, world_B - world_A);
 		normal.normalize();
@@ -139,32 +162,10 @@ void fill_triangle(Model &model, TGAImage &image)
 		if (intensity < 0)
 			continue;
 
+		// TGAColor color = TGAColor(rand() % 255, rand() % 255, rand() % 255, 255);
 		TGAColor color = TGAColor(intensity * 255, intensity * 255, intensity * 255, 255);
 
-		// TGAColor color = TGAColor(rand() % 255, rand() % 255, rand() % 255, 255);
-
-		int min_x = std::min(std::min(x0, x1), x2);
-		int min_y = std::min(std::min(y0, y1), y2);
-		int max_x = std::max(std::max(x0, x1), x2);
-		int max_y = std::max(std::max(y0, y1), y2);
-
-		for (int x = min_x; x <= max_x; x++)
-		{
-			for (int y = min_y; y <= max_y; y++)
-			{
-				Vector3f P(x, y, 0);
-				Vector3f barycenter = barycentric(A, B, C, P);
-				if (is_inside(barycenter))
-				{
-					P.z = world_A.z * barycenter.x + world_B.z * barycenter.y + world_C.z * barycenter.z;
-					if (zbuffer[x + y * width] < P.z)
-					{
-						zbuffer[x + y * width] = P.z;
-						image.set(x, y, color);
-					}
-				}
-			}
-		}
+		draw_fill_triangle(image, pts, zbuffer, color);
 	}
 }
 
@@ -172,7 +173,7 @@ int main(int argc, char **argv)
 {
 	TGAImage image(width, height, TGAImage::RGB);
 	Model m = Model("obj/african_head/african_head.obj", width, height);
-	fill_triangle(m, image);
+	draw_all_triangles(m, image);
 	image.flip_vertically();
 	image.write_tga_file("output.tga");
 	return 0;
