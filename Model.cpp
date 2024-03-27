@@ -1,4 +1,4 @@
-#include "Model.h"
+#include "Model.hpp"
 
 Model::Model(const char *filename)
 {
@@ -81,6 +81,17 @@ std::vector<Vector3f> Model::get_texture_triangle(const int i)
     std::vector<Vector3f> texture_pts = {texture_A, texture_B, texture_C};
 
     return texture_pts;
+}
+
+std::vector<Vector3f> Model::get_normal_triangle(const int i)
+{
+    Vector3f normal_A(vn[triangles[i].ip0].x, vn[triangles[i].ip0].y, vn[triangles[i].ip0].z);
+    Vector3f normal_B(vn[triangles[i].ip1].x, vn[triangles[i].ip1].y, vn[triangles[i].ip1].z);
+    Vector3f normal_C(vn[triangles[i].ip2].x, vn[triangles[i].ip2].y, vn[triangles[i].ip2].z);
+
+    std::vector<Vector3f> normal_pts = {normal_A, normal_B, normal_C};
+
+    return normal_pts;
 }
 
 TGAImage Model::get_texture_diffuse()

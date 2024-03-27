@@ -3,17 +3,18 @@
 #include <string.h>
 #include <iostream>
 #include <vector>
-#include "Model.h"
-#include "utils.h"
+#include "Model.hpp"
+#include "utils.hpp"
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red = TGAColor(255, 0, 0, 255);
 const int width = 800;
 const int height = 800;
-const Vector3f light_dir(0, 0, -1);
+const Vector3f light_dir(0, 0, 1);
 
-void draw_fill_triangle(TGAImage &image, std::vector<Vector3f> pts, float *zbuffer, float intensity, std::vector<Vector3f> texture_pts, TGAImage &texture)
+void draw_fill_triangle(TGAImage &image, std::vector<Vector3f> pts, float *zbuffer, std::vector<Vector3f> normal_pts, std::vector<Vector3f> texture_pts, TGAImage &texture)
 {
+
 	float x0 = (pts[0].x + 1) * 0.5 * width;
 	float y0 = (pts[0].y + 1) * 0.5 * height;
 
@@ -46,6 +47,12 @@ void draw_fill_triangle(TGAImage &image, std::vector<Vector3f> pts, float *zbuff
 			if (is_inside(barycenter))
 			{
 				P.z = pts[0].z * barycenter.x + pts[1].z * barycenter.y + pts[2].z * barycenter.z;
+				// Vector3f normal = cross_product(pts[1] - pts[0], pts[2] - pts[0]);
+
+				Vector3f normal = normal_pts[0] * barycenter.x + normal_pts[1] * barycenter.y + normal_pts[2] * barycenter.z;
+				normal.normalize();
+				float intensity = std::max(0.0f, dot_product(normal, light_dir));
+
 				if (zbuffer[x + y * width] < P.z)
 				{
 					float u = texture_A.x * barycenter.x + texture_B.x * barycenter.y + texture_C.x * barycenter.z;
@@ -75,19 +82,11 @@ void draw_all_triangles(Model &model, TGAImage &image)
 	for (int i = 0; i < nb_triangles; i++)
 	{
 		std::vector<Vector3f> pts = model.get_vertex_triangle(i);
-
-		// Intensity
-		Vector3f normal = cross_product(pts[2] - pts[0], pts[1] - pts[0]);
-		normal.normalize();
-		float intensity = dot_product(normal, light_dir);
-
-		if (intensity < 0)
-			continue;
-
+		std::vector<Vector3f> normal_pts = model.get_normal_triangle(i);
 		std::vector<Vector3f> texture_pts = model.get_texture_triangle(i);
 
 		TGAImage texture = model.get_texture_diffuse();
-		draw_fill_triangle(image, pts, zbuffer, intensity, texture_pts, texture);
+		draw_fill_triangle(image, pts, zbuffer, normal_pts, texture_pts, texture);
 	}
 }
 

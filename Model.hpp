@@ -5,7 +5,7 @@
 #include <string.h>
 #include <iostream>
 #include <fstream>
-#include "Vector3f.h"
+#include "Vector3f.hpp"
 #include "tgaimage.h"
 
 struct Triangle
@@ -31,6 +31,7 @@ public:
     int get_nb_triangles();
     std::vector<Vector3f> get_vertex_triangle(const int i);
     std::vector<Vector3f> get_texture_triangle(const int i);
+    std::vector<Vector3f> get_normal_triangle(const int i);
     TGAImage get_texture_diffuse();
 };
 
