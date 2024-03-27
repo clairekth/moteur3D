@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include "Vector3f.h"
+#include "tgaimage.h"
 
 struct Triangle
 {
@@ -13,8 +14,9 @@ struct Triangle
     Triangle(int ip0, int ip1, int ip2) : ip0(ip0), ip1(ip1), ip2(ip2) {}
 };
 
-struct Model
+class Model
 {
+protected:
     std::vector<Vector3f> vertex;
     std::vector<Triangle> triangles;
     std::vector<Triangle> texture_coordinates;
@@ -22,59 +24,14 @@ struct Model
     std::vector<Vector3f> vt;
     TGAImage texture_diffuse;
 
-    Model(const char *filename)
-    {
-        std::ifstream in;
-        in.open(filename, std::ifstream::in);
-
-        if (!in.is_open())
-        {
-            std::cerr << "Cannot open " << filename << std::endl;
-            return;
-        }
-
-        std::string line;
-        while (!in.eof())
-        {
-            while (std::getline(in, line))
-            {
-                if (line.c_str()[0] == 'v' && line.c_str()[1] == ' ')
-                {
-                    float a, b, c;
-                    sscanf(line.c_str(), "v %f %f %f", &a, &b, &c);
-                    vertex.push_back({a, b, c});
-                }
-                else if (line.c_str()[0] == 'f' && line.c_str()[1] == ' ')
-                {
-                    int a1, b1, c1, a2, b2, c2, a3, b3, c3;
-                    sscanf(line.c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d", &a1, &b1, &c1, &a2, &b2, &c2, &a3, &b3, &c3);
-                    triangles.push_back({a1 - 1, a2 - 1, a3 - 1});
-                    texture_coordinates.push_back({b1 - 1, b2 - 1, b3 - 1});
-                }
-                else if (line.c_str()[0] == 'v' && line.c_str()[1] == 'n')
-                {
-                    float a, b, c;
-                    sscanf(line.c_str(), "vn %f %f %f", &a, &b, &c);
-                    vn.push_back({a, b, c});
-                }
-                else if (line.c_str()[0] == 'v' && line.c_str()[1] == 't')
-                {
-                    float a, b;
-                    sscanf(line.c_str(), "vt %f %f", &a, &b);
-                    vt.push_back({a, b, 0});
-                }
-            }
-        }
-
-        in.close();
-        load_texture("obj/african_head/african_head_diffuse.tga");
-    };
-
-    void load_texture(const char *filename)
-    {
-        texture_diffuse.read_tga_file(filename);
-        texture_diffuse.flip_vertically();
-    }
+public:
+    Model(const char *filename);
+    ~Model();
+    void load_texture(const char *filename);
+    int get_nb_triangles();
+    std::vector<Vector3f> get_vertex_triangle(const int i);
+    std::vector<Vector3f> get_texture_triangle(const int i);
+    TGAImage get_texture_diffuse();
 };
 
 #endif // MODEL_H
