@@ -97,7 +97,7 @@ float dot_product(Vector3f A, Vector3f B)
 	return A.x * B.x + A.y * B.y + A.z * B.z;
 }
 
-void draw_fill_triangle(TGAImage &image, std::vector<Vector3f> pts, float *zbuffer, TGAColor color)
+void draw_fill_triangle(TGAImage &image, std::vector<Vector3f> pts, float *zbuffer, float intensity, std::vector<Vector3f> texture_pts, TGAImage &texture)
 {
 	float x0 = (pts[0].x + 1) * 0.5 * width;
 	float y0 = (pts[0].y + 1) * 0.5 * height;
@@ -117,6 +117,11 @@ void draw_fill_triangle(TGAImage &image, std::vector<Vector3f> pts, float *zbuff
 	int max_x = std::max(std::max(x0, x1), x2);
 	int max_y = std::max(std::max(y0, y1), y2);
 
+	// Texture
+	Vector3f texture_A(texture_pts[0].x, texture_pts[0].y, 0);
+	Vector3f texture_B(texture_pts[1].x, texture_pts[1].y, 0);
+	Vector3f texture_C(texture_pts[2].x, texture_pts[2].y, 0);
+
 	for (int x = min_x; x <= max_x; x++)
 	{
 		for (int y = min_y; y <= max_y; y++)
@@ -128,6 +133,12 @@ void draw_fill_triangle(TGAImage &image, std::vector<Vector3f> pts, float *zbuff
 				P.z = pts[0].z * barycenter.x + pts[1].z * barycenter.y + pts[2].z * barycenter.z;
 				if (zbuffer[x + y * width] < P.z)
 				{
+					float u = texture_A.x * barycenter.x + texture_B.x * barycenter.y + texture_C.x * barycenter.z;
+					float v = texture_A.y * barycenter.x + texture_B.y * barycenter.y + texture_C.y * barycenter.z;
+
+					TGAColor color = texture.get(u * texture.get_width(), v * texture.get_height());
+					std::cout << texture.get_width() << " " << texture.get_height() << std::endl;
+					color = TGAColor(color.r * intensity, color.g * intensity, color.b * intensity, 255);
 					zbuffer[x + y * width] = P.z;
 					image.set(x, y, color);
 				}
@@ -162,10 +173,12 @@ void draw_all_triangles(Model &model, TGAImage &image)
 		if (intensity < 0)
 			continue;
 
-		// TGAColor color = TGAColor(rand() % 255, rand() % 255, rand() % 255, 255);
-		TGAColor color = TGAColor(intensity * 255, intensity * 255, intensity * 255, 255);
+		std::vector<Vector3f> texture_pts = {model.vt[model.texture_coordinates[i].ip0], model.vt[model.texture_coordinates[i].ip1], model.vt[model.texture_coordinates[i].ip2]};
 
-		draw_fill_triangle(image, pts, zbuffer, color);
+		// TGAColor color = TGAColor(rand() % 255, rand() % 255, rand() % 255, 255);
+		// TGAColor color = TGAColor(intensity * 255, intensity * 255, intensity * 255, 255);
+
+		draw_fill_triangle(image, pts, zbuffer, intensity, texture_pts, model.texture_diffuse);
 	}
 }
 

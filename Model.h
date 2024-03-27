@@ -17,6 +17,10 @@ struct Model
 {
     std::vector<Vector3f> vertex;
     std::vector<Triangle> triangles;
+    std::vector<Triangle> texture_coordinates;
+    std::vector<Vector3f> vn;
+    std::vector<Vector3f> vt;
+    TGAImage texture_diffuse;
 
     Model(const char *filename)
     {
@@ -45,10 +49,32 @@ struct Model
                     int a1, b1, c1, a2, b2, c2, a3, b3, c3;
                     sscanf(line.c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d", &a1, &b1, &c1, &a2, &b2, &c2, &a3, &b3, &c3);
                     triangles.push_back({a1 - 1, a2 - 1, a3 - 1});
+                    texture_coordinates.push_back({b1 - 1, b2 - 1, b3 - 1});
+                }
+                else if (line.c_str()[0] == 'v' && line.c_str()[1] == 'n')
+                {
+                    float a, b, c;
+                    sscanf(line.c_str(), "vn %f %f %f", &a, &b, &c);
+                    vn.push_back({a, b, c});
+                }
+                else if (line.c_str()[0] == 'v' && line.c_str()[1] == 't')
+                {
+                    float a, b;
+                    sscanf(line.c_str(), "vt %f %f", &a, &b);
+                    vt.push_back({a, b, 0});
                 }
             }
         }
+
+        in.close();
+        load_texture("obj/african_head/african_head_diffuse.tga");
     };
+
+    void load_texture(const char *filename)
+    {
+        texture_diffuse.read_tga_file(filename);
+        texture_diffuse.flip_vertically();
+    }
 };
 
 #endif // MODEL_H
