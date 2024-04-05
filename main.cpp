@@ -34,7 +34,7 @@ Matrix move_camera(Vector3f center, Vector3f up, Vector3f eye)
 		m[0][i] = x[i];
 		m[1][i] = y[i];
 		m[2][i] = z[i];
-		Tr[i][3] = -eye[i];
+		Tr[i][3] = -center[i];
 	}
 	return m * Tr;
 }
@@ -78,9 +78,9 @@ void draw_fill_triangle(TGAImage &image, std::vector<Vector3f> pts, float *zbuff
 	Vector3f texture_B(texture_pts[1].x, texture_pts[1].y, 0);
 	Vector3f texture_C(texture_pts[2].x, texture_pts[2].y, 0);
 
-	Vector3f screen_coord_A = matrix2vector(viewport_matrix * projection * vector2matrix(pts[0]));
-	Vector3f screen_coord_B = matrix2vector(viewport_matrix * projection * vector2matrix(pts[1]));
-	Vector3f screen_coord_C = matrix2vector(viewport_matrix * projection * vector2matrix(pts[2]));
+	Vector3f screen_coord_A = matrix2vector(viewport_matrix * projection * model_view * vector2matrix(pts[0]));
+	Vector3f screen_coord_B = matrix2vector(viewport_matrix * projection * model_view * vector2matrix(pts[1]));
+	Vector3f screen_coord_C = matrix2vector(viewport_matrix * projection * model_view * vector2matrix(pts[2]));
 
 	int min_x = std::min(std::min(screen_coord_A.x, screen_coord_B.x), screen_coord_C.x);
 	int min_y = std::min(std::min(screen_coord_A.y, screen_coord_B.y), screen_coord_C.y);
@@ -147,8 +147,14 @@ int main(int argc, char **argv)
 	Model m = Model("obj/african_head/african_head.obj");
 	projection = Matrix::identity(4);
 	viewport_matrix = viewport(width / 8, height / 8, width * 3 / 4, height * 3 / 4);
-	projection[3][2] = -1.f / camera.z;
-	// model_view = move_camera(Vector3f(0, 0, 0), Vector3f(0, 1, 0), Vector3f(0, 0, 3));
+	// viewport_matrix = viewport(0, 0, width, height);
+	// projection[3][2] = -1.f / camera.z;
+	Vector3f eye(1, 1, 3);
+	Vector3f center(0, 0, 0);
+	Vector3f up(0, 1, 0);
+	projection[3][2] = -1.f / (eye - center).norm();
+	model_view = move_camera(center, up, eye);
+
 	draw_all_triangles(m, image);
 	image.flip_vertically();
 	image.write_tga_file("output.tga");
