@@ -29,6 +29,12 @@ struct Vector3f
         return Vector3f(x * k, y * k, z * k);
     }
 
+    float operator[](int idx) const
+    {
+        return idx == 0 ? x : idx == 1 ? y
+                                       : z;
+    }
+
     void normalize()
     {
         float norm = sqrt(x * x + y * y + z * z);

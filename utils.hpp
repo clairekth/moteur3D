@@ -1,6 +1,8 @@
 #ifndef _UTILS_H_
 #define _UTILS_H_
 
+#include "Matrix.hpp"
+
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color)
 {
     bool steep = false;
@@ -85,6 +87,21 @@ Vector3f cross_product(Vector3f A, Vector3f B)
 float dot_product(Vector3f A, Vector3f B)
 {
     return A.x * B.x + A.y * B.y + A.z * B.z;
+}
+
+Matrix vector2matrix(Vector3f v)
+{
+    Matrix m(4, 1);
+    m[0][0] = v.x;
+    m[1][0] = v.y;
+    m[2][0] = v.z;
+    m[3][0] = 1.0f;
+    return m;
+}
+
+Vector3f matrix2vector(Matrix m)
+{
+    return Vector3f(m[0][0] / m[3][0], m[1][0] / m[3][0], m[2][0] / m[3][0]);
 }
 
 #endif // _UTILS_H_
