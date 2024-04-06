@@ -99,12 +99,7 @@ TGAImage Model::get_texture_diffuse()
     return texture_diffuse;
 }
 
-void Model::draw_all_vertex(TGAImage &image, TGAColor color, int width, int height)
+std::vector<Vector3f> Model::get_vertex()
 {
-    for (int i = 0; i < vertex.size(); i++)
-    {
-        Vector3f point = vertex[i];
-        point = world_to_screen(point, width, height);
-        image.set(point.x, point.y, color);
-    }
+    return vertex;
 }

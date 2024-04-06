@@ -1,5 +1,14 @@
 #include "Utils.hpp"
 
+void draw_all_vertex(std::vector<Vector3f> vertex, TGAImage &image, TGAColor color, int width, int height)
+{
+    for (int i = 0; i < vertex.size(); i++)
+    {
+        Vector3f point = world_to_screen(vertex[i], width, height);
+        image.set(point.x, point.y, color);
+    }
+}
+
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color)
 {
     bool steep = false;
