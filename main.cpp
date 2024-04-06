@@ -1,14 +1,8 @@
-#include "tgaimage.h"
-#include <fstream>
-#include <string.h>
-#include <iostream>
-#include <vector>
 #include "Model.hpp"
-#include "utils.hpp"
-#include "Matrix.hpp"
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red = TGAColor(255, 0, 0, 255);
+const TGAColor green = TGAColor(0, 255, 0, 255);
 const int width = 1024;
 const int height = 1024;
 const int depth = 255;
@@ -78,21 +72,13 @@ Matrix rotation_matrix(Vector3f angles)
     return rotation_z * rotation_y * rotation_x;
 }
 
-Vector3f world_to_screen(Vector3f point)
-{
-    Vector3f res(0, 0, 0);
-    res.x = (point.x + 1) * width * 0.5;
-    res.y = (point.y + 1) * height * 0.5;
-    res.z = point.z;
-
-    return res;
-}
-
 int main(int argc, char **argv)
 {
     TGAImage image(width, height, TGAImage::RGB);
     Model m = Model("obj/african_head/african_head.obj");
     TGAImage texture = m.get_texture_diffuse();
+
+    m.draw_all_vertex(image, green, width, height);
 
     float zbuffer[width * height];
     for (int j = 0; j < width * height; j++)
@@ -133,109 +119,111 @@ int main(int argc, char **argv)
     //           << projection.to_string() << "\n";
     // std::cout << "viewport_matrix: \n " << viewport_matrix.to_string() << "\n";
 
-    for (int i = 0; i < m.get_nb_triangles(); i++)
-    {
-        std::vector<Vector3f> vertex = m.get_vertex_triangle(i);
-        std::vector<Vector3f> normales = m.get_normal_triangle(i);
-        std::vector<Vector3f> textures = m.get_texture_triangle(i);
+    // for (int i = 0; i < m.get_nb_triangles(); i++)
+    // {
+    //     std::vector<Vector3f> vertex = m.get_vertex_triangle(i);
+    //     std::vector<Vector3f> normales = m.get_normal_triangle(i);
+    //     std::vector<Vector3f> textures = m.get_texture_triangle(i);
 
-        Vector3f A_vertex = (vertex[0]);
-        Vector3f B_vertex = (vertex[1]);
-        Vector3f C_vertex = (vertex[2]);
+    //     Vector3f A_vertex = (vertex[0]);
+    //     Vector3f B_vertex = (vertex[1]);
+    //     Vector3f C_vertex = (vertex[2]);
 
-        Vector3f A_normal = (normales[0]);
-        Vector3f B_normal = (normales[1]);
-        Vector3f C_normal = (normales[2]);
+    //     Vector3f A_normal = (normales[0]);
+    //     Vector3f B_normal = (normales[1]);
+    //     Vector3f C_normal = (normales[2]);
 
-        Vector3f A_texture = (textures[0]);
-        Vector3f B_texture = (textures[1]);
-        Vector3f C_texture = (textures[2]);
+    //     Vector3f A_texture = (textures[0]);
+    //     Vector3f B_texture = (textures[1]);
+    //     Vector3f C_texture = (textures[2]);
 
-        // A = matrix2vector(viewport_matrix * projection * model_view * vector2matrix(A));
-        // B = matrix2vector(viewport_matrix * projection * model_view * vector2matrix(B));
-        // C = matrix2vector(viewport_matrix * projection * model_view * vector2matrix(C));
+    //     // A = matrix2vector(viewport_matrix * projection * model_view * vector2matrix(A));
+    //     // B = matrix2vector(viewport_matrix * projection * model_view * vector2matrix(B));
+    //     // C = matrix2vector(viewport_matrix * projection * model_view * vector2matrix(C));
 
-        // std::cout << "A: " << A.to_string() << "\n";
-        // std::cout << "B: " << B.to_string() << "\n";
-        // std::cout << "C: " << C.to_string() << "\n";
+    //     // std::cout << "A: " << A.to_string() << "\n";
+    //     // std::cout << "B: " << B.to_string() << "\n";
+    //     // std::cout << "C: " << C.to_string() << "\n";
 
-        A_vertex = matrix2vector(viewport_matrix * projection * model_view * M * vector2matrix(A_vertex));
-        B_vertex = matrix2vector(viewport_matrix * projection * model_view * M * vector2matrix(B_vertex));
-        C_vertex = matrix2vector(viewport_matrix * projection * model_view * M * vector2matrix(C_vertex));
+    //     A_vertex = matrix2vector(viewport_matrix * projection * model_view * M * vector2matrix(A_vertex));
+    //     B_vertex = matrix2vector(viewport_matrix * projection * model_view * M * vector2matrix(B_vertex));
+    //     C_vertex = matrix2vector(viewport_matrix * projection * model_view * M * vector2matrix(C_vertex));
 
-        // A_vertex = matrix2vector(model_view * M * vector2matrix(A_vertex));
-        // B_vertex = matrix2vector(model_view * M * vector2matrix(B_vertex));
-        // C_vertex = matrix2vector(model_view * M * vector2matrix(C_vertex));
+    //     // A_vertex = matrix2vector(model_view * M * vector2matrix(A_vertex));
+    //     // B_vertex = matrix2vector(model_view * M * vector2matrix(B_vertex));
+    //     // C_vertex = matrix2vector(model_view * M * vector2matrix(C_vertex));
 
-        // std::cout << "A_vertex: " << A_vertex.to_string() << "\n";
-        // std::cout << "B_vertex: " << B_vertex.to_string() << "\n";
-        // std::cout << "C_vertex: " << C_vertex.to_string() << "\n";
+    //     // std::cout << "A_vertex: " << A_vertex.to_string() << "\n";
+    //     // std::cout << "B_vertex: " << B_vertex.to_string() << "\n";
+    //     // std::cout << "C_vertex: " << C_vertex.to_string() << "\n";
 
-        A_normal = matrix2vector(model_view * M * vector2matrix(A_normal));
-        B_normal = matrix2vector(model_view * M * vector2matrix(B_normal));
-        C_normal = matrix2vector(model_view * M * vector2matrix(C_normal));
+    //     A_normal = matrix2vector(model_view * M * vector2matrix(A_normal));
+    //     B_normal = matrix2vector(model_view * M * vector2matrix(B_normal));
+    //     C_normal = matrix2vector(model_view * M * vector2matrix(C_normal));
 
-        // A_vertex = world_to_screen(A_vertex);
-        // B_vertex = world_to_screen(B_vertex);
-        // C_vertex = world_to_screen(C_vertex);
+    //     // A_vertex = world_to_screen(A_vertex);
+    //     // B_vertex = world_to_screen(B_vertex);
+    //     // C_vertex = world_to_screen(C_vertex);
 
-        // std::cout << "--A_vertex: " << A_vertex.to_string() << "\n";
-        // std::cout << "--B_vertex: " << B_vertex.to_string() << "\n";
-        // std::cout << "--C_vertex: " << C_vertex.to_string() << "\n";
+    //     // std::cout << "--A_vertex: " << A_vertex.to_string() << "\n";
+    //     // std::cout << "--B_vertex: " << B_vertex.to_string() << "\n";
+    //     // std::cout << "--C_vertex: " << C_vertex.to_string() << "\n";
 
-        int min_x = std::min(std::min(A_vertex.x, B_vertex.x), C_vertex.x);
-        int min_y = std::min(std::min(A_vertex.y, B_vertex.y), C_vertex.y);
-        int max_x = std::max(std::max(A_vertex.x, B_vertex.x), C_vertex.x);
-        int max_y = std::max(std::max(A_vertex.y, B_vertex.y), C_vertex.y);
+    //     int min_x = std::min(std::min(A_vertex.x, B_vertex.x), C_vertex.x);
+    //     int min_y = std::min(std::min(A_vertex.y, B_vertex.y), C_vertex.y);
+    //     int max_x = std::max(std::max(A_vertex.x, B_vertex.x), C_vertex.x);
+    //     int max_y = std::max(std::max(A_vertex.y, B_vertex.y), C_vertex.y);
 
-        for (int x = min_x; x <= max_x; x++)
-        {
-            for (int y = min_y; y <= max_y; y++)
-            {
-                Vector3f P(x, y, 0);
-                Vector3f barycenter = barycentric(A_vertex, B_vertex, C_vertex, P);
-                // std::cout << P.to_string() << "\n";
-                // std::cout << "barycenter: " << barycenter.to_string() << "\n";
-                if (is_inside(barycenter))
-                {
-                    P.z = A_vertex.z * barycenter.x + B_vertex.z * barycenter.y + C_vertex.z * barycenter.z;
+    //     for (int x = min_x; x <= max_x; x++)
+    //     {
+    //         for (int y = min_y; y <= max_y; y++)
+    //         {
+    //             Vector3f P(x, y, 0);
+    //             Vector3f barycenter = barycentric(A_vertex, B_vertex, C_vertex, P);
+    //             // std::cout << P.to_string() << "\n";
+    //             // std::cout << "barycenter: " << barycenter.to_string() << "\n";
+    //             if (is_inside(barycenter))
+    //             {
+    //                 P.z = A_vertex.z * barycenter.x + B_vertex.z * barycenter.y + C_vertex.z * barycenter.z;
 
-                    // Vector3f normal = cross_product(B_vertex - A_vertex, C_vertex - A_vertex);
-                    // Vector3f normal = cross_product(B_normal - A_normal, C_normal - A_normal);
-                    Vector3f normal = A_normal * barycenter.x + B_normal * barycenter.y + C_normal * barycenter.z;
-                    normal.normalize();
-                    Vector3f light_dir(0, 0, 1);
-                    light_dir.normalize();
-                    // float intensity = std::max(0.0f, dot_product(normal, light_dir));
+    //                 // Vector3f normal = cross_product(B_vertex - A_vertex, C_vertex - A_vertex);
+    //                 // Vector3f normal = cross_product(B_normal - A_normal, C_normal - A_normal);
+    //                 Vector3f normal = A_normal * barycenter.x + B_normal * barycenter.y + C_normal * barycenter.z;
+    //                 normal.normalize();
+    //                 Vector3f light_dir(0, 0, 1);
+    //                 light_dir.normalize();
+    //                 // float intensity = std::max(0.0f, dot_product(normal, light_dir));
 
-                    float intensity = dot_product(normal, light_dir);
-                    if (intensity < 0)
-                        continue;
+    //                 float intensity = dot_product(normal, light_dir);
+    //                 if (intensity < 0)
+    //                     continue;
 
-                    // std::cout << "P.z: " << P.z << "\n";
-                    // std::cout << "zbuffer[x + y * width]: " << x + y * width << "\n";
-                    float z_index = x + y * width;
-                    if (z_index < 0 || z_index >= width * height)
-                    {
-                        continue;
-                    }
-                    if (zbuffer[x + y * width] < P.z)
-                    {
-                        float u = A_texture.x * barycenter.x + B_texture.x * barycenter.y + C_texture.x * barycenter.z;
-                        float v = A_texture.y * barycenter.x + B_texture.y * barycenter.y + C_texture.y * barycenter.z;
+    //                 // std::cout << "P.z: " << P.z << "\n";
+    //                 // std::cout << "zbuffer[x + y * width]: " << x + y * width << "\n";
+    //                 float z_index = x + y * width;
+    //                 if (z_index < 0 || z_index >= width * height)
+    //                 {
+    //                     continue;
+    //                 }
+    //                 if (zbuffer[x + y * width] < P.z)
+    //                 {
+    //                     float u = A_texture.x * barycenter.x + B_texture.x * barycenter.y + C_texture.x * barycenter.z;
+    //                     float v = A_texture.y * barycenter.x + B_texture.y * barycenter.y + C_texture.y * barycenter.z;
 
-                        TGAColor color = texture.get(u * texture.get_width(), v * texture.get_height());
-                        color = TGAColor(color.r * intensity, color.g * intensity, color.b * intensity, 255);
-                        zbuffer[x + y * width] = P.z;
-                        // TGAColor color = TGAColor(255 * intensity, 255 * intensity, 255 * intensity, 255);
-                        image.set(x, y, color);
-                    }
-                }
-            }
-        }
-    }
+    //                     TGAColor color = texture.get(u * texture.get_width(), v * texture.get_height());
+    //                     color = TGAColor(color.r * intensity, color.g * intensity, color.b * intensity, 255);
+    //                     zbuffer[x + y * width] = P.z;
+    //                     // TGAColor color = TGAColor(255 * intensity, 255 * intensity, 255 * intensity, 255);
+    //                     image.set(x, y, color);
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
     image.flip_vertically();
-    image.write_tga_file("output.tga");
+    char filename[100];
+    sprintf(filename, "output.tga");
+    image.write_tga_file(filename);
 
     return 0;
 }

@@ -1,18 +1,7 @@
 #ifndef MODEL_H
 #define MODEL_H
 
-#include <vector>
-#include <string.h>
-#include <iostream>
-#include <fstream>
-#include "Vector3f.hpp"
-#include "tgaimage.h"
-
-struct Triangle
-{
-    int ip0, ip1, ip2; // index of the points
-    Triangle(int ip0, int ip1, int ip2) : ip0(ip0), ip1(ip1), ip2(ip2) {}
-};
+#include "Utils.hpp"
 
 class Model
 {
@@ -33,6 +22,7 @@ public:
     std::vector<Vector3f> get_texture_triangle(const int i);
     std::vector<Vector3f> get_normal_triangle(const int i);
     TGAImage get_texture_diffuse();
+    void draw_all_vertex(TGAImage &image, TGAColor color, int width, int height);
 };
 
 #endif // MODEL_H
