@@ -1,0 +1,263 @@
+#include "tgaimage.h"
+#include <fstream>
+#include <string.h>
+#include <iostream>
+#include <vector>
+#include "Model.hpp"
+#include "utils.hpp"
+#include "Matrix.hpp"
+
+const TGAColor white = TGAColor(255, 255, 255, 255);
+const TGAColor red = TGAColor(255, 0, 0, 255);
+const int width = 1024;
+const int height = 1024;
+const int depth = 250;
+const Vector3f light_dir(0, 0, 1);
+const Vector3f camera(0, 0, 3);
+
+Matrix projection(4, 4);
+Matrix viewport_matrix(4, 4);
+Matrix model_view(4, 4);
+Matrix M(4, 4);
+
+Matrix lookAt(Vector3f center, Vector3f up, Vector3f eye)
+{
+	Vector3f z_axis = (eye - center); // camera direction
+	z_axis.normalize();
+	Vector3f x_axis = cross_product(up, z_axis); // camera right
+	x_axis.normalize();
+	Vector3f y_axis = cross_product(z_axis, x_axis); // camera up
+	y_axis.normalize();
+	// Matrix O = Matrix::identity(4);
+	// Matrix T = Matrix::identity(4);
+	// for (int i = 0; i < 3; i++)
+	// {
+	// 	O[0][i] = x_axis[i];
+	// 	O[1][i] = y_axis[i];
+	// 	O[2][i] = z_axis[i];
+	// 	T[i][3] = -center[i];
+	// }
+
+	// Matrix O({{x_axis.x, y_axis.x, z_axis.x, 0},
+	// 		  {x_axis.y, y_axis.y, z_axis.y, 0},
+	// 		  {x_axis.z, y_axis.z, z_axis.z, 0},
+	// 		  {0, 0, 0, 1}});
+
+	// Matrix T({{1, 0, 0, 0},
+	// 		  {0, 1, 0, 0},
+	// 		  {0, 0, 1, 0},
+	// 		  {-eye.x, -eye.y, -eye.z, 1}});
+
+	Matrix O({{x_axis.x, x_axis.y, x_axis.z, 0},
+			  {y_axis.x, y_axis.y, y_axis.z, 0},
+			  {z_axis.x, z_axis.y, z_axis.z, 0},
+			  {0, 0, 0, 1}});
+
+	Matrix T({{1, 0, 0, -center.x},
+			  {0, 1, 0, -center.y},
+			  {0, 0, 1, -center.z},
+			  {0, 0, 0, 1}});
+
+	return O * T;
+}
+
+Matrix viewport(int x, int y, int w, int h)
+{
+	Matrix m = Matrix::identity(4);
+	m[0][3] = x + w / 2.f;
+	m[1][3] = y + h / 2.f;
+	m[2][3] = depth / 2.f;
+
+	m[0][0] = w / 2.f;
+	m[1][1] = h / 2.f;
+	m[2][2] = depth / 2.f;
+	return m;
+}
+
+Matrix perspectiveProjection()
+{
+	float fov = 90 * (M_PI / 180);
+	float aspectRatio = width / height;
+	float near = 0.1;
+	float far = 100;
+
+	float tanHalfFov = tan(fov / 2);
+	float f_n = far - near;
+
+	return Matrix({{1 / (aspectRatio * tanHalfFov), 0, 0, 0},
+				   {0, 1 / tanHalfFov, 0, 0},
+				   {0, 0, -(far + near) / f_n, -(2 * far * near) / f_n},
+				   {0, 0, -1, 0}});
+}
+
+Vector3f world_to_screen(Vector3f point)
+{
+	Vector3f res(0, 0, 0);
+	res.x = (point.x + 1) * width * 0.5;
+	res.y = (point.y + 1) * height * 0.5;
+	res.z = point.z;
+
+	return res;
+}
+
+void draw_fill_triangle(TGAImage &image, std::vector<Vector3f> pts, float *zbuffer, std::vector<Vector3f> normal_pts, std::vector<Vector3f> texture_pts, TGAImage &texture)
+{
+	// Texture
+	Vector3f texture_A(texture_pts[0].x, texture_pts[0].y, 0);
+	Vector3f texture_B(texture_pts[1].x, texture_pts[1].y, 0);
+	Vector3f texture_C(texture_pts[2].x, texture_pts[2].y, 0);
+
+	Vector3f screen_coord_A = matrix2vector(viewport_matrix * projection * model_view * M * vector2matrix((pts[0])));
+	Vector3f screen_coord_B = matrix2vector(viewport_matrix * projection * model_view * M * vector2matrix((pts[1])));
+	Vector3f screen_coord_C = matrix2vector(viewport_matrix * projection * model_view * M * vector2matrix((pts[2])));
+
+	// Vector3f screen_coord_A = matrix2vector(projection * viewport_matrix * model_view * vector2matrix(pts[0]));
+	// Vector3f screen_coord_B = matrix2vector(projection * viewport_matrix * model_view * vector2matrix(pts[1]));
+	// Vector3f screen_coord_C = matrix2vector(projection * viewport_matrix * model_view * vector2matrix(pts[2]));
+
+	// Vector3f screen_coord_A = matrix2vector(projection * model_view * vector2matrix((pts[0])));
+	// Vector3f screen_coord_B = matrix2vector(projection * model_view * vector2matrix((pts[1])));
+	// Vector3f screen_coord_C = matrix2vector(projection * model_view * vector2matrix((pts[2])));
+
+	// std::cout << "screen_coord_A: " << screen_coord_A.to_string() << "\n";
+	// std::cout << "screen_coord_B: " << screen_coord_B.to_string() << "\n";
+	// std::cout << "screen_coord_C: " << screen_coord_C.to_string() << "\n";
+
+	int min_x = std::min(std::min(screen_coord_A.x, screen_coord_B.x), screen_coord_C.x);
+	int min_y = std::min(std::min(screen_coord_A.y, screen_coord_B.y), screen_coord_C.y);
+	int max_x = std::max(std::max(screen_coord_A.x, screen_coord_B.x), screen_coord_C.x);
+	int max_y = std::max(std::max(screen_coord_A.y, screen_coord_B.y), screen_coord_C.y);
+
+	Matrix pt1 = M * vector2matrix(pts[0]);
+	Matrix pt2 = M * vector2matrix(pts[1]);
+	Matrix pt3 = M * vector2matrix(pts[2]);
+
+	Vector3f pt1_v(pt1[0][0], pt1[1][0], pt1[2][0]);
+	Vector3f pt2_v(pt2[0][0], pt2[1][0], pt2[2][0]);
+	Vector3f pt3_v(pt3[0][0], pt3[1][0], pt3[2][0]);
+
+	// pt1_v = world_to_screen(pt1_v);
+	// pt2_v = world_to_screen(pt2_v);
+	// pt3_v = world_to_screen(pt3_v);
+
+	// int min_x = std::min(std::min(pt1_v.x, pt2_v.x), pt3_v.x);
+	// int min_y = std::min(std::min(pt1_v.y, pt2_v.y), pt3_v.y);
+	// int max_x = std::max(std::max(pt1_v.x, pt2_v.x), pt3_v.x);
+	// int max_y = std::max(std::max(pt1_v.y, pt2_v.y), pt3_v.y);
+
+	// std::cout << "pt1_v: " << pt1_v.to_string() << "\n";
+	// std::cout << "pt2_v: " << pt2_v.to_string() << "\n";
+	// std::cout << "pt3_v: " << pt3_v.to_string() << "\n";
+
+	for (int x = min_x; x <= max_x; x++)
+	{
+		for (int y = min_y; y <= max_y; y++)
+		{
+			Vector3f P(x, y, 0);
+			Vector3f barycenter = barycentric(screen_coord_A, screen_coord_B, screen_coord_C, P);
+			// Vector3f barycenter = barycentric(A, B, C, P);
+			// Vector3f barycenter = barycentric(pt1_v, pt2_v, pt3_v, P);
+			if (is_inside(barycenter))
+			{
+				// P.z = pts[0].z * barycenter.x + pts[1].z * barycenter.y + pts[2].z * barycenter.z;
+				P.z = pt1_v.z * barycenter.x + pt2_v.z * barycenter.y + pt3_v.z * barycenter.z;
+
+				// Vector3f normal = cross_product(pts[1] - pts[0], pts[2] - pts[0]);
+				Vector3f normal = normal_pts[0] * barycenter.x + normal_pts[1] * barycenter.y + normal_pts[2] * barycenter.z;
+				// Vector3f normal = pt1_v * barycenter.x + pt2_v * barycenter.y + pt3_v * barycenter.z;
+				// Vector3f normal = cross_product(screen_coord_B - screen_coord_A, screen_coord_C - screen_coord_A);
+				normal.normalize();
+				float intensity = std::max(0.0f, dot_product(normal, light_dir));
+				// float intensity = dot_product(normal, light_dir);
+				// if (intensity < 0)
+				// 	continue;
+				float z_index = x + y * width;
+				if (z_index < 0 || z_index >= width * height)
+					continue;
+
+				if (zbuffer[x + y * width] < P.z)
+				{
+					float u = texture_A.x * barycenter.x + texture_B.x * barycenter.y + texture_C.x * barycenter.z;
+					float v = texture_A.y * barycenter.x + texture_B.y * barycenter.y + texture_C.y * barycenter.z;
+
+					// float u = pt1_v.x * barycenter.x + pt2_v.x * barycenter.y + pt3_v.x * barycenter.z;
+					// float v = pt1_v.y * barycenter.x + pt2_v.y * barycenter.y + pt3_v.y * barycenter.z;
+
+					// TGAColor color = TGAColor(rand() % 255, rand() % 255, rand() % 255, 255);
+					// TGAColor color = TGAColor(intensity * 255, intensity * 255, intensity * 255, 255);
+					TGAColor color = texture.get(u * texture.get_width(), v * texture.get_height());
+					color = TGAColor(color.r * intensity, color.g * intensity, color.b * intensity, 255);
+					zbuffer[x + y * width] = P.z;
+					image.set(x, y, color);
+					// std::cout << "x : " << x << " y : " << y << " z : " << P.z << "\n";
+				}
+			}
+		}
+	}
+}
+
+void draw_all_triangles(Model &model, TGAImage &image)
+{
+	int nb_triangles = model.get_nb_triangles();
+
+	float zbuffer[width * height];
+	for (int j = 0; j < width * height; j++)
+	{
+		zbuffer[j] = std::numeric_limits<float>::lowest();
+	}
+
+	for (int i = 0; i < nb_triangles; i++)
+	{
+		std::vector<Vector3f> pts = model.get_vertex_triangle(i);
+		std::vector<Vector3f> normal_pts = model.get_normal_triangle(i);
+		std::vector<Vector3f> texture_pts = model.get_texture_triangle(i);
+
+		TGAImage texture = model.get_texture_diffuse();
+		draw_fill_triangle(image, pts, zbuffer, normal_pts, texture_pts, texture);
+	}
+}
+
+int main(int argc, char **argv)
+{
+	TGAImage image(width, height, TGAImage::RGB);
+	Model m = Model("obj/african_head/african_head.obj");
+	projection = Matrix::identity(4);
+	viewport_matrix = viewport(width / 8, height / 8, width * 3 / 4, height * 3 / 4);
+	// viewport_matrix = viewport(-100, -100, width + 100, height + 100);
+	// viewport_matrix = viewport(200, 200, width - 200, height - 200);
+
+	// Rotation autour de l'axe y
+	float angle = 120 * (M_PI / 180);
+	Matrix rotation_y = Matrix::identity(4);
+	rotation_y[0][0] = cos(angle);
+	rotation_y[0][2] = sin(angle);
+	rotation_y[2][0] = -sin(angle);
+	rotation_y[2][2] = cos(angle);
+
+	// Translation
+	Matrix translation = Matrix::identity(4);
+	translation[0][3] = 0;
+	translation[1][3] = 0;
+	translation[2][3] = 0;
+
+	// Scale
+	Matrix scale = Matrix::identity(4);
+	scale[0][0] = 1;
+	scale[1][1] = 1;
+	scale[2][2] = 1;
+
+	M = translation * rotation_y * scale;
+
+	Vector3f eye(0, 0, 10);
+	Vector3f center(0, 0, 0);
+	Vector3f up(0, 1, 0);
+	projection[3][2] = -1.f / (center - eye).norm();
+	model_view = lookAt(center, up, eye);
+	// projection = perspectiveProjection();
+
+	draw_all_triangles(m, image);
+	image.flip_vertically();
+	image.write_tga_file("output.tga");
+
+	return 0;
+}

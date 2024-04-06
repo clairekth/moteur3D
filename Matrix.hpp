@@ -14,6 +14,38 @@ struct Matrix
         data = new float[nrows * ncols];
     }
 
+    Matrix(const std::initializer_list<std::initializer_list<float>> &values)
+    {
+        nrows = values.size();
+        ncols = values.begin()->size();
+        data = new float[nrows * ncols];
+        int index = 0;
+        for (auto row : values)
+        {
+            for (auto value : row)
+            {
+                data[index++] = value;
+            }
+        }
+    }
+
+    // Matrix &operator=(const std::initializer_list<std::initializer_list<float>> &values)
+    // {
+    //     nrows = values.size();
+    //     ncols = values.begin()->size();
+    //     free_data();
+    //     data = new float[nrows * ncols];
+    //     int index = 0;
+    //     for (auto row : values)
+    //     {
+    //         for (auto value : row)
+    //         {
+    //             data[index++] = value;
+    //         }
+    //     }
+    //     return *this;
+    // }
+
     static Matrix identity(int nrows)
     {
         Matrix res = Matrix(nrows, nrows);

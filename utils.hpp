@@ -81,6 +81,9 @@ bool is_inside(Vector3f barycenter)
 
 Vector3f cross_product(Vector3f A, Vector3f B)
 {
+    // std::cout << "Cross product\n";
+    // std::cout << "A: " << A.to_string() << "\n";
+    // std::cout << "B: " << B.to_string() << "\n";
     return Vector3f(A.y * B.z - A.z * B.y, A.z * B.x - A.x * B.z, A.x * B.y - A.y * B.x);
 }
 

@@ -1,6 +1,6 @@
 SYSCONF_LINK = g++
-CPPFLAGS     = 
-LDFLAGS      =
+CPPFLAGS     = -g -Wno-unused-variable
+LDFLAGS      = 
 LIBS         = -lm
 
 DESTDIR = ./

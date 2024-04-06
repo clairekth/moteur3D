@@ -2,6 +2,7 @@
 #define VECTOR3F_H
 
 #include <math.h>
+#include <string>
 
 struct Vector3f
 {
@@ -43,10 +44,24 @@ struct Vector3f
     void normalize()
     {
         float norm = sqrt(x * x + y * y + z * z);
-        x /= norm;
-        y /= norm;
-        z /= norm;
+        if (norm == 0)
+        {
+            x = 0.f;
+            y = 0.f;
+            z = 0.f;
+        }
+        else
+        {
+            x /= norm;
+            y /= norm;
+            z /= norm;
+        }
     };
+
+    std::string to_string()
+    {
+        return "x: " + std::to_string(x) + " y: " + std::to_string(y) + " z: " + std::to_string(z);
+    }
 };
 
 #endif // VECTOR3F_H
