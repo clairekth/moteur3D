@@ -1,5 +1,5 @@
-#ifndef VECTOR3F_H
-#define VECTOR3F_H
+#ifndef _VECTOR3F_H_
+#define _VECTOR3F_H_
 
 #include <math.h>
 #include <string>
@@ -40,28 +40,18 @@ struct Vector3f
     {
         return sqrt(x * x + y * y + z * z);
     }
-
-    void normalize()
-    {
-        float norm = sqrt(x * x + y * y + z * z);
-        if (norm == 0)
-        {
-            x = 0.f;
-            y = 0.f;
-            z = 0.f;
-        }
-        else
-        {
-            x /= norm;
-            y /= norm;
-            z /= norm;
-        }
-    };
-
     std::string to_string()
     {
         return "x: " + std::to_string(x) + " y: " + std::to_string(y) + " z: " + std::to_string(z);
     }
 };
 
-#endif // VECTOR3F_H
+Vector3f normalize(const Vector3f &v)
+{
+    float norm = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+    if (norm == 0)
+        return Vector3f(0, 0, 0);
+    return Vector3f(v.x / norm, v.y / norm, v.z / norm);
+};
+
+#endif // _VECTOR3F_H_

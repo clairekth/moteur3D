@@ -1,5 +1,5 @@
-#ifndef MODEL_H
-#define MODEL_H
+#ifndef _MODEL_H_
+#define _MODEL_H_
 
 #include "Utils.hpp"
 
@@ -25,4 +25,4 @@ public:
     TGAImage get_texture_diffuse();
 };
 
-#endif // MODEL_H
+#endif // _MODEL_H_
