@@ -1,15 +1,13 @@
 #ifndef _GL_H_
 #define _GL_H_
 
-#include "Vector3f.hpp"
 #include "Utils.hpp"
-#include "Matrix.hpp"
 
 Matrix lookAt(Vector3f center, Vector3f up, Vector3f eye)
 {
-    Vector3f z_axis = normalize(eye - center);                  // camera direction
-    Vector3f x_axis = normalize(cross_product(up, z_axis));     // camera right
-    Vector3f y_axis = normalize(cross_product(z_axis, x_axis)); // camera up
+    Vector3f z_axis = Vector3f::normalize(eye - center);                  // camera direction
+    Vector3f x_axis = Vector3f::normalize(cross_product(up, z_axis));     // camera right
+    Vector3f y_axis = Vector3f::normalize(cross_product(z_axis, x_axis)); // camera up
 
     // Orientation matrix
     Matrix O({{x_axis.x, x_axis.y, x_axis.z, 0},

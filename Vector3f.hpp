@@ -44,14 +44,14 @@ struct Vector3f
     {
         return "x: " + std::to_string(x) + " y: " + std::to_string(y) + " z: " + std::to_string(z);
     }
-};
 
-Vector3f normalize(const Vector3f &v)
-{
-    float norm = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-    if (norm == 0)
-        return Vector3f(0, 0, 0);
-    return Vector3f(v.x / norm, v.y / norm, v.z / norm);
+    static Vector3f normalize(const Vector3f &v)
+    {
+        float norm = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+        if (norm == 0)
+            return Vector3f(0, 0, 0);
+        return Vector3f(v.x / norm, v.y / norm, v.z / norm);
+    };
 };
 
 #endif // _VECTOR3F_H_

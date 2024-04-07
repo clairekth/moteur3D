@@ -7,7 +7,7 @@ const TGAColor green = TGAColor(0, 255, 0, 255);
 const int width = 1024;
 const int height = 1024;
 const int depth = 255;
-const Vector3f light_dir = normalize(Vector3f(0, 0, 1));
+const Vector3f light_dir = Vector3f::normalize(Vector3f(0, 0, 1));
 
 void draw_triangle(std::vector<Vector3f> pts_vertex, std::vector<Vector3f> pts_normales, std::vector<Vector3f> pts_textures, float *zbuffer, TGAImage &image, TGAImage &texture)
 {
@@ -27,7 +27,7 @@ void draw_triangle(std::vector<Vector3f> pts_vertex, std::vector<Vector3f> pts_n
             {
                 P.z = pts_vertex[0].z * barycenter.x + pts_vertex[1].z * barycenter.y + pts_vertex[2].z * barycenter.z;
 
-                Vector3f normal = normalize(pts_normales[0] * barycenter.x + pts_normales[1] * barycenter.y + pts_normales[2] * barycenter.z);
+                Vector3f normal = Vector3f::normalize(pts_normales[0] * barycenter.x + pts_normales[1] * barycenter.y + pts_normales[2] * barycenter.z);
                 float intensity = dot_product(normal, light_dir);
                 if (intensity < 0)
                     continue;

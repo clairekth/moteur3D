@@ -1,7 +1,7 @@
 #ifndef _MATRIX_HPP
 #define _MATRIX_HPP
 
-#include "math.h"
+#include <math.h>
 #include <string>
 
 struct Matrix
