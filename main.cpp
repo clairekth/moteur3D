@@ -62,6 +62,15 @@ int main(int argc, char **argv)
 
     // draw_all_vertex(m.get_vertex(), image, green, width, height);
 
+    Matrix test({{1, 0, 2, -1},
+                 {3, 0, 0, 5},
+                 {2, 1, 4, -3},
+                 {1, 0, 5, 0}});
+
+    float det = test.determinant();
+    std::cout << "determinant :" << det << "\n";
+    return 0;
+
     float zbuffer[width * height];
     for (int j = 0; j < width * height; j++)
     {

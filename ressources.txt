@@ -1,0 +1,7 @@
+__CAMERA__
+https://www.3dgep.com/understanding-the-view-matrix/#The_Camera_Transformation
+https://www.youtube.com/watch?v=q5jOLztcvsM
+
+__MATRICES__
+- Déterminant : https://www.youtube.com/watch?v=XhxYBbv_xfs
+
