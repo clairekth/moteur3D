@@ -3,5 +3,10 @@ https://www.3dgep.com/understanding-the-view-matrix/#The_Camera_Transformation
 https://www.youtube.com/watch?v=q5jOLztcvsM
 
 __MATRICES__
-- Déterminant : https://www.youtube.com/watch?v=XhxYBbv_xfs
+- Cofacteurs : https://www.youtube.com/watch?v=Y610L-iAkEQ
+- Déterminant : https://www.youtube.com/watch?v=wwz0A74pLkQ&t=328s
+- Inverse : https://www.youtube.com/watch?v=7AOgkTBCTU8
+- Transposée : https://www.youtube.com/watch?v=Rw3p6WPwb98
+
+
 

@@ -12,17 +12,18 @@ protected:
     std::vector<Vector3f> vn;
     std::vector<Vector3f> vt;
     TGAImage texture_diffuse;
+    TGAImage nm;
 
 public:
     Model(const char *filename);
     ~Model();
-    void load_texture(const char *filename);
     int get_nb_triangles();
     std::vector<Vector3f> get_vertex();
     std::vector<Vector3f> get_vertex_triangle(const int i);
     std::vector<Vector3f> get_texture_triangle(const int i);
     std::vector<Vector3f> get_normal_triangle(const int i);
     TGAImage get_texture_diffuse();
+    TGAImage get_nm();
 };
 
 #endif // _MODEL_H_

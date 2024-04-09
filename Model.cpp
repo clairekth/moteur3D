@@ -45,16 +45,13 @@ Model::Model(const char *filename)
     }
 
     in.close();
-    load_texture("obj/african_head/african_head_diffuse.tga");
+    texture_diffuse.read_tga_file("obj/african_head/african_head_diffuse.tga");
+    texture_diffuse.flip_vertically();
+    nm.read_tga_file("obj/african_head/african_head_nm.tga");
+    nm.flip_vertically();
 };
 
 Model::~Model() {}
-
-void Model::load_texture(const char *filename)
-{
-    texture_diffuse.read_tga_file(filename);
-    texture_diffuse.flip_vertically();
-}
 
 int Model::get_nb_triangles()
 {
@@ -97,6 +94,11 @@ std::vector<Vector3f> Model::get_normal_triangle(const int i)
 TGAImage Model::get_texture_diffuse()
 {
     return texture_diffuse;
+}
+
+TGAImage Model::get_nm()
+{
+    return nm;
 }
 
 std::vector<Vector3f> Model::get_vertex()

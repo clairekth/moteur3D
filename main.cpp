@@ -7,9 +7,9 @@ const TGAColor green = TGAColor(0, 255, 0, 255);
 const int width = 1024;
 const int height = 1024;
 const int depth = 255;
-const Vector3f light_dir = Vector3f::normalize(Vector3f(0, 0, 1));
+const Vector3f light_dir = Vector3f::normalize(Vector3f(1, 1, 1));
 
-void draw_triangle(std::vector<Vector3f> pts_vertex, std::vector<Vector3f> pts_normales, std::vector<Vector3f> pts_textures, float *zbuffer, TGAImage &image, TGAImage &texture)
+void draw_triangle(std::vector<Vector3f> pts_vertex, std::vector<Vector3f> pts_normales, std::vector<Vector3f> pts_textures, float *zbuffer, TGAImage &image, TGAImage &texture, TGAImage &nm)
 {
     int min_x = std::min(std::min(pts_vertex[0].x, pts_vertex[1].x), pts_vertex[2].x);
     int min_y = std::min(std::min(pts_vertex[0].y, pts_vertex[1].y), pts_vertex[2].y);
@@ -27,11 +27,6 @@ void draw_triangle(std::vector<Vector3f> pts_vertex, std::vector<Vector3f> pts_n
             {
                 P.z = pts_vertex[0].z * barycenter.x + pts_vertex[1].z * barycenter.y + pts_vertex[2].z * barycenter.z;
 
-                Vector3f normal = Vector3f::normalize(pts_normales[0] * barycenter.x + pts_normales[1] * barycenter.y + pts_normales[2] * barycenter.z);
-                float intensity = dot_product(normal, light_dir);
-                if (intensity < 0)
-                    continue;
-
                 int z_index = x + y * width;
                 if (z_index < 0 || z_index >= width * height)
                     continue;
@@ -39,11 +34,18 @@ void draw_triangle(std::vector<Vector3f> pts_vertex, std::vector<Vector3f> pts_n
                 if (zbuffer[z_index] < P.z)
                 {
                     zbuffer[z_index] = P.z;
+                    float u = pts_textures[0].x * barycenter.x + pts_textures[1].x * barycenter.y + pts_textures[2].x * barycenter.z;
+                    float v = pts_textures[0].y * barycenter.x + pts_textures[1].y * barycenter.y + pts_textures[2].y * barycenter.z;
 
                     // TGAColor color = TGAColor(255 * intensity, 255 * intensity, 255 * intensity, 255);
 
-                    float u = pts_textures[0].x * barycenter.x + pts_textures[1].x * barycenter.y + pts_textures[2].x * barycenter.z;
-                    float v = pts_textures[0].y * barycenter.x + pts_textures[1].y * barycenter.y + pts_textures[2].y * barycenter.z;
+                    // Vector3f normal = Vector3f::normalize(pts_normales[0] * barycenter.x + pts_normales[1] * barycenter.y + pts_normales[2] * barycenter.z);
+                    // float intensity = std::max(0.0f, dot_product(normal, light_dir));
+
+                    TGAColor color_nm = nm.get(u * nm.get_width(), v * nm.get_height());
+                    Vector3f normal_nm = Vector3f::normalize(Vector3f(color_nm.r - 130, color_nm.g - 130, color_nm.b - 130));
+                    float intensity = std::max(0.0f, dot_product(normal_nm, light_dir));
+
                     TGAColor color = texture.get(u * texture.get_width(), v * texture.get_height());
                     color = TGAColor(color.r * intensity, color.g * intensity, color.b * intensity, 255);
 
@@ -59,17 +61,9 @@ int main(int argc, char **argv)
     TGAImage image(width, height, TGAImage::RGB);
     Model m = Model("obj/african_head/african_head.obj");
     TGAImage texture = m.get_texture_diffuse();
+    TGAImage nm = m.get_nm();
 
     // draw_all_vertex(m.get_vertex(), image, green, width, height);
-
-    Matrix test({{1, 0, 2, -1},
-                 {3, 0, 0, 5},
-                 {2, 1, 4, -3},
-                 {1, 0, 5, 0}});
-
-    float det = test.determinant();
-    std::cout << "determinant :" << det << "\n";
-    return 0;
 
     float zbuffer[width * height];
     for (int j = 0; j < width * height; j++)
@@ -96,9 +90,14 @@ int main(int argc, char **argv)
         std::vector<Vector3f> normales = m.get_normal_triangle(i);
         std::vector<Vector3f> pts_textures = m.get_texture_triangle(i);
 
-        Vector3f A_vertex = matrix2vector(viewport_matrix * projection_matrix * model_view * M * vector2matrix(vertex[0]));
-        Vector3f B_vertex = matrix2vector(viewport_matrix * projection_matrix * model_view * M * vector2matrix(vertex[1]));
-        Vector3f C_vertex = matrix2vector(viewport_matrix * projection_matrix * model_view * M * vector2matrix(vertex[2]));
+        // Vector3f A_vertex = matrix2vector(viewport_matrix * projection_matrix * model_view * M * vector2matrix(vertex[0]));
+        // Vector3f B_vertex = matrix2vector(viewport_matrix * projection_matrix * model_view * M * vector2matrix(vertex[1]));
+        // Vector3f C_vertex = matrix2vector(viewport_matrix * projection_matrix * model_view * M * vector2matrix(vertex[2]));
+
+        Matrix MIT = (projection_matrix * model_view).inverse().transpose();
+        Vector3f A_vertex = matrix2vector(viewport_matrix * MIT * M * vector2matrix(vertex[0]));
+        Vector3f B_vertex = matrix2vector(viewport_matrix * MIT * M * vector2matrix(vertex[1]));
+        Vector3f C_vertex = matrix2vector(viewport_matrix * MIT * M * vector2matrix(vertex[2]));
 
         Vector3f A_normal = matrix2vector(model_view * M * vector2matrix(normales[0]));
         Vector3f B_normal = matrix2vector(model_view * M * vector2matrix(normales[1]));
@@ -107,7 +106,7 @@ int main(int argc, char **argv)
         std::vector<Vector3f> pts_vertex = {A_vertex, B_vertex, C_vertex};
         std::vector<Vector3f> pts_normales = {A_normal, B_normal, C_normal};
 
-        draw_triangle(pts_vertex, pts_normales, pts_textures, zbuffer, image, texture);
+        draw_triangle(pts_vertex, pts_normales, pts_textures, zbuffer, image, texture, nm);
     }
 
     image.flip_vertically();
