@@ -49,6 +49,8 @@ Model::Model(const char *filename)
     texture_diffuse.flip_vertically();
     nm.read_tga_file("obj/african_head/african_head_nm.tga");
     nm.flip_vertically();
+    specular_map.read_tga_file("obj/african_head/african_head_spec.tga");
+    specular_map.flip_vertically();
 };
 
 Model::~Model() {}
@@ -99,6 +101,11 @@ TGAImage Model::get_texture_diffuse()
 TGAImage Model::get_nm()
 {
     return nm;
+}
+
+TGAImage Model::get_specular_map()
+{
+    return specular_map;
 }
 
 std::vector<Vector3f> Model::get_vertex()

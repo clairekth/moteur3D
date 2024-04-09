@@ -7,9 +7,9 @@ const TGAColor green = TGAColor(0, 255, 0, 255);
 const int width = 1024;
 const int height = 1024;
 const int depth = 255;
-const Vector3f light_dir = Vector3f::normalize(Vector3f(1, 1, 1));
+const Vector3f light_dir = Vector3f::normalize(Vector3f(1, 2, 10));
 
-void draw_triangle(std::vector<Vector3f> pts_vertex, std::vector<Vector3f> pts_normales, std::vector<Vector3f> pts_textures, float *zbuffer, TGAImage &image, TGAImage &texture, TGAImage &nm)
+void draw_triangle(std::vector<Vector3f> pts_vertex, std::vector<Vector3f> pts_normales, std::vector<Vector3f> pts_textures, float *zbuffer, TGAImage &image, TGAImage &texture, TGAImage &nm, TGAImage &specular_map)
 {
     int min_x = std::min(std::min(pts_vertex[0].x, pts_vertex[1].x), pts_vertex[2].x);
     int min_y = std::min(std::min(pts_vertex[0].y, pts_vertex[1].y), pts_vertex[2].y);
@@ -37,17 +37,24 @@ void draw_triangle(std::vector<Vector3f> pts_vertex, std::vector<Vector3f> pts_n
                     float u = pts_textures[0].x * barycenter.x + pts_textures[1].x * barycenter.y + pts_textures[2].x * barycenter.z;
                     float v = pts_textures[0].y * barycenter.x + pts_textures[1].y * barycenter.y + pts_textures[2].y * barycenter.z;
 
-                    // TGAColor color = TGAColor(255 * intensity, 255 * intensity, 255 * intensity, 255);
+                    TGAColor color = texture.get(u * texture.get_width(), v * texture.get_height());
 
                     // Vector3f normal = Vector3f::normalize(pts_normales[0] * barycenter.x + pts_normales[1] * barycenter.y + pts_normales[2] * barycenter.z);
                     // float intensity = std::max(0.0f, dot_product(normal, light_dir));
 
                     TGAColor color_nm = nm.get(u * nm.get_width(), v * nm.get_height());
-                    Vector3f normal_nm = Vector3f::normalize(Vector3f(color_nm.r - 130, color_nm.g - 130, color_nm.b - 130));
-                    float intensity = std::max(0.0f, dot_product(normal_nm, light_dir));
 
-                    TGAColor color = texture.get(u * texture.get_width(), v * texture.get_height());
-                    color = TGAColor(color.r * intensity, color.g * intensity, color.b * intensity, 255);
+                    // Vector3f normal_nm = Vector3f::normalize(Vector3f(color_nm.r - 130, color_nm.g - 130, color_nm.b - 130));
+                    // float intensity = std::max(0.0f, dot_product(normal_nm, light_dir));
+                    // color = TGAColor(color.r * intensity, color.g * intensity, color.b * intensity, 255);
+
+                    // With Specular map
+                    Vector3f normal_nm = Vector3f::normalize(Vector3f(color_nm.r - 180, color_nm.g - 180, color_nm.b - 180));
+                    TGAColor color_specular = specular_map.get(u * specular_map.get_width(), v * specular_map.get_height());
+                    Vector3f r = Vector3f::normalize(normal_nm * (dot_product(normal_nm, light_dir) * 2.0f) - light_dir);
+                    float spec = pow(std::max(r.z, 0.0f), color_specular.r);
+                    float diff = std::max(0.0f, dot_product(normal_nm, light_dir));
+                    color = TGAColor(color.r * (diff + 0.4 * spec), color.g * (diff + 0.4 * spec), color.b * (diff + 0.4 * spec), 255);
 
                     image.set(x, y, color);
                 }
@@ -62,6 +69,7 @@ int main(int argc, char **argv)
     Model m = Model("obj/african_head/african_head.obj");
     TGAImage texture = m.get_texture_diffuse();
     TGAImage nm = m.get_nm();
+    TGAImage specular_map = m.get_specular_map();
 
     // draw_all_vertex(m.get_vertex(), image, green, width, height);
 
@@ -106,7 +114,7 @@ int main(int argc, char **argv)
         std::vector<Vector3f> pts_vertex = {A_vertex, B_vertex, C_vertex};
         std::vector<Vector3f> pts_normales = {A_normal, B_normal, C_normal};
 
-        draw_triangle(pts_vertex, pts_normales, pts_textures, zbuffer, image, texture, nm);
+        draw_triangle(pts_vertex, pts_normales, pts_textures, zbuffer, image, texture, nm, specular_map);
     }
 
     image.flip_vertically();

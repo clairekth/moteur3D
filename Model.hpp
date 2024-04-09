@@ -13,6 +13,7 @@ protected:
     std::vector<Vector3f> vt;
     TGAImage texture_diffuse;
     TGAImage nm;
+    TGAImage specular_map;
 
 public:
     Model(const char *filename);
@@ -24,6 +25,7 @@ public:
     std::vector<Vector3f> get_normal_triangle(const int i);
     TGAImage get_texture_diffuse();
     TGAImage get_nm();
+    TGAImage get_specular_map();
 };
 
 #endif // _MODEL_H_
