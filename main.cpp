@@ -38,23 +38,25 @@ void draw_triangle(std::vector<Vector3f> pts_vertex, std::vector<Vector3f> pts_n
                     float v = pts_textures[0].y * barycenter.x + pts_textures[1].y * barycenter.y + pts_textures[2].y * barycenter.z;
 
                     TGAColor color = texture.get(u * texture.get_width(), v * texture.get_height());
-
-                    // Vector3f normal = Vector3f::normalize(pts_normales[0] * barycenter.x + pts_normales[1] * barycenter.y + pts_normales[2] * barycenter.z);
-                    // float intensity = std::max(0.0f, dot_product(normal, light_dir));
-
                     TGAColor color_nm = nm.get(u * nm.get_width(), v * nm.get_height());
 
+                    // Gouraud shading
+                    // Vector3f normal = Vector3f::normalize(pts_normales[0] * barycenter.x + pts_normales[1] * barycenter.y + pts_normales[2] * barycenter.z);
+                    // float intensity = std::max(0.0f, dot_product(normal, light_dir));
+                    // color = TGAColor(color.r * intensity, color.g * intensity, color.b * intensity, 255);
+
+                    // Normal map
                     // Vector3f normal_nm = Vector3f::normalize(Vector3f(color_nm.r - 130, color_nm.g - 130, color_nm.b - 130));
                     // float intensity = std::max(0.0f, dot_product(normal_nm, light_dir));
                     // color = TGAColor(color.r * intensity, color.g * intensity, color.b * intensity, 255);
 
-                    // With Specular map
+                    // Specular map
                     Vector3f normal_nm = Vector3f::normalize(Vector3f(color_nm.r - 180, color_nm.g - 180, color_nm.b - 180));
                     TGAColor color_specular = specular_map.get(u * specular_map.get_width(), v * specular_map.get_height());
                     Vector3f r = Vector3f::normalize(normal_nm * (dot_product(normal_nm, light_dir) * 2.0f) - light_dir);
                     float spec = pow(std::max(r.z, 0.0f), color_specular.r);
                     float diff = std::max(0.0f, dot_product(normal_nm, light_dir));
-                    color = TGAColor(color.r * (diff + 0.4 * spec), color.g * (diff + 0.4 * spec), color.b * (diff + 0.4 * spec), 255);
+                    color = TGAColor(color.r * (diff + 0.45 * spec), color.g * (diff + 0.45 * spec), color.b * (diff + 0.45 * spec), 255);
 
                     image.set(x, y, color);
                 }
@@ -65,6 +67,7 @@ void draw_triangle(std::vector<Vector3f> pts_vertex, std::vector<Vector3f> pts_n
 
 int main(int argc, char **argv)
 {
+    int angle = std::atoi(argv[1]);
     TGAImage image(width, height, TGAImage::RGB);
     Model m = Model("obj/african_head/african_head.obj");
     TGAImage texture = m.get_texture_diffuse();
@@ -79,7 +82,7 @@ int main(int argc, char **argv)
         zbuffer[j] = std::numeric_limits<float>::lowest();
     }
 
-    Matrix rotation = rotation_matrix(Vector3f(0, 0, 0));
+    Matrix rotation = rotation_matrix(Vector3f(0, angle, 0));
     Matrix translation = translation_matrix(Vector3f(0, 0, 0));
     Matrix scale = scale_matrix(Vector3f(1, 1, 1));
     Matrix M = translation * rotation * scale;
@@ -118,7 +121,9 @@ int main(int argc, char **argv)
     }
 
     image.flip_vertically();
-    image.write_tga_file("output.tga");
+    char name[50];
+    sprintf(name, "%d.tga", angle);
+    image.write_tga_file(name);
 
     return 0;
 }
