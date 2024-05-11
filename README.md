@@ -13,4 +13,4 @@ make && ./main
 
 # Rendu
 
-![Rendu](output.tga)
+![Rendu](output.png)
