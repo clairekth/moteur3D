@@ -13,5 +13,4 @@ make && ./main
 
 # Rendu
 
-## Specular
-![Rendu](output_gif.gif)
+![Rendu](output.tga)

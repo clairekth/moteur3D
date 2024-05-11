@@ -67,7 +67,6 @@ void draw_triangle(std::vector<Vector3f> pts_vertex, std::vector<Vector3f> pts_n
 
 int main(int argc, char **argv)
 {
-    int angle = std::atoi(argv[1]);
     TGAImage image(width, height, TGAImage::RGB);
     Model m = Model("obj/african_head/african_head.obj");
     TGAImage texture = m.get_texture_diffuse();
@@ -82,7 +81,7 @@ int main(int argc, char **argv)
         zbuffer[j] = std::numeric_limits<float>::lowest();
     }
 
-    Matrix rotation = rotation_matrix(Vector3f(0, angle, 0));
+    Matrix rotation = rotation_matrix(Vector3f(0, 0, 0));
     Matrix translation = translation_matrix(Vector3f(0, 0, 0));
     Matrix scale = scale_matrix(Vector3f(1, 1, 1));
     Matrix M = translation * rotation * scale;
@@ -92,7 +91,7 @@ int main(int argc, char **argv)
     Vector3f up(0, 1, 0);
 
     Matrix projection_matrix = projection(eye, center);
-    Matrix viewport_matrix = viewport(width / 8, height / 8, width * 3 / 4, height * 3 / 4, depth);
+    Matrix viewport_matrix = viewport(50, 50, width - 100, height - 100, depth);
     Matrix model_view = lookAt(center, up, eye);
 
     for (int i = 0; i < m.get_nb_triangles(); i++)
@@ -121,9 +120,7 @@ int main(int argc, char **argv)
     }
 
     image.flip_vertically();
-    char name[50];
-    sprintf(name, "%d.tga", angle);
-    image.write_tga_file(name);
+    image.write_tga_file("output.tga");
 
     return 0;
 }
